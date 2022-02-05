@@ -1,4 +1,4 @@
-from errors import *
+from .errors import *
 
 class Parser:
     def __init__(self):
