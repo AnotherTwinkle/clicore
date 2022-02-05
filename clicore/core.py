@@ -1,3 +1,5 @@
+from errors import *
+
 class Parser:
     def __init__(self):
         self._commands = {}
@@ -6,7 +8,7 @@ class Parser:
     def parse(self, command, arguments, flags):
         name = self.alias_table.get(command, None)
         if name is None:
-            raise CommandNotFound
+            raise CommandNotFound(f"{command} is not a reigstered command or alias.")
 
         command = self._commands.get(name, None)
         return command._parse_and_invoke(arguments, flags)
@@ -19,14 +21,14 @@ class Parser:
                 raise CommandAlreadyRegistered("This command has already been reigstered.")
 
             if not isinstance(command.aliases, (list, tuple)):
-                raise Exception("Aliases must be a list or tuple.")
+                raise CommandError("Aliases must be a list or tuple.")
 
             if not isinstance(command.flags, (list, tuple)):
-                raise Exception("Flags must be a list or tuple.")
+                raise CommandError("Flags must be a list or tuple.")
             
             for alias in command.aliases:
                 if alias in self.alias_table:
-                    raise CommandAlreadyRegistered("This alias has already been registered.")
+                    raise CommandAlreadyRegistered(f"The alias '{alias}' has already been registered.")
 
             self._commands[command.name] = command
             for alias in command.aliases:
@@ -41,16 +43,16 @@ class Parser:
         x = 0
         while x < len(args):
             arg = args[x]
-            if arg.startswith('--') and len(arg) > 2:
+            if arg.startswith('--') and len(arg) > 2: # Boolean flags.
                 flags[arg[2:]] = True
-            elif arg.startswith('-') and len(arg) > 1:
+            elif arg.startswith('-') and len(arg) > 1: # Store flags.
                 try:
-                    if args[x+1].startswith('-'): # Store flags. These are currently unused.
-                        raise Exception(f'No value was provided for flag {arg}')
+                    if args[x+1].startswith('-'):
+                        raise FlagError(f'No value was provided for flag {arg}')
                     flags[arg[1:]] = args[x+1] # The next argument should be the value
 
                 except IndexError:
-                    raise Exception(f'Unexpected end of input after flag declaration.')
+                    raise FlagError(f'Unexpected end of input after flag declaration.')
                 x += 1 # We will skip the next index
             else:
                 notflags.append(arg)
@@ -76,7 +78,7 @@ class Command:
 
         for flag in self.flags:
             if flag not in self.params:
-                raise Exception(f'Flag "{flag}" is not an argument in function {self.callback}')
+                raise FlagError(f'Flag "{flag}" is not an argument in function {self.callback}')
 
     def _parse_and_invoke(self, arguments, flags):
         args = self.parser_func(arguments)
@@ -94,10 +96,4 @@ class Command:
 
     def __call__(self, *args, **kwargs):
         return self.callback(*args, **kwargs)
-
-class CommandNotFound(Exception):
-    pass
-
-class CommandAlreadyRegistered(Exception):
-    pass
 
