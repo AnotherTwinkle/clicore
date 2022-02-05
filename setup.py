@@ -6,7 +6,7 @@ setup(name = "clicore",
         version = "0.2",
         author = "AnotherTwinkle",
         url = "https://www.github.com/AnotherTwinkle/clicore",
-        packages = ['clicore'],
+        packages = ["clicore"],
         include_package_data = True,
         )
         

@@ -1,3 +1,7 @@
+import os
+import sys
+
+from . import utils
 from .errors import *
 
 class Parser:
@@ -12,6 +16,23 @@ class Parser:
 
         command = self._commands.get(name, None)
         return command._parse_and_invoke(arguments, flags)
+
+    def run(self):
+        """A high level method that handles much of the pre-parsing work for you."""
+
+        target = utils.safeget(sys.argv, 1,  None)
+        directory = os.getcwd() # Will replace with context in the future
+
+        args = [directory,] + sys.argv[2:]
+        flags, args = self.parse_flags(args)
+
+        if target is None:
+            print("No command was provided")
+
+        try:
+            return self.parse(target, args, flags)
+        except CommandNotFound:
+            return print('CommandNotFound')
 
     def command(self, parser_func, **kwargs):
         def decorator(func):
