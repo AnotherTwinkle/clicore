@@ -1,6 +1,3 @@
 include README.md
 include .gitignore
-include LICENSE 
-
-recursive-include cftool/templates *
-recursive-include cftool *.py
+include LICENSE
