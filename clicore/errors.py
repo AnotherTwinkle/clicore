@@ -10,4 +10,6 @@ class CommandNotFound(CommandError):
 class CommandAlreadyRegistered(CommandError):
     pass
 
+class CommandNotProvided(CommandError):
+    pass
 

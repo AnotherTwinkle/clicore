@@ -27,29 +27,31 @@ class Parser:
         args = sys.argv[2:]
 
         if target is None:
-            print("No command was provided")
+            raise CommandNotProvided("No command was provided.")
+
         return self.parse(target, args)
+
+    def add_command(self, command):
+        if command.name in self._commands:
+            raise CommandAlreadyRegistered("This command has already been reigstered.")
+
+        if not isinstance(command.aliases, (list, tuple)):
+            raise CommandError("Command aliases must be a list or tuple.")
+
+        for alias in command.aliases:
+            if alias in self.alias_table:
+                raise CommandAlreadyRegistered(f"The alias '{alias}' has already been registered.")
+
+        self._commands[command.name] = command
+        for alias in command.aliases:
+            self.alias_table[alias] = command.name
+        self.alias_table[command.name] = command.name
+        return command
 
     def command(self, **kwargs):
         def decorator(func):
             command = Command(func, **kwargs)
-
-            if command.name in self._commands:
-                raise CommandAlreadyRegistered("This command has already been reigstered.")
-
-            if not isinstance(command.aliases, (list, tuple)):
-                raise CommandError("Command aliases must be a list or tuple.")
-
-            for alias in command.aliases:
-                if alias in self.alias_table:
-                    raise CommandAlreadyRegistered(f"The alias '{alias}' has already been registered.")
-
-            self._commands[command.name] = command
-            for alias in command.aliases:
-                self.alias_table[alias] = command.name
-            self.alias_table[command.name] = command.name
-
-            return command 
+            return self.add_command(command)
         return decorator
 
     def add_flag(self, name, default, aliases = [], **kwargs):
@@ -87,8 +89,21 @@ class Parser:
             else:
                 notflags.append(arg)
             x += 1
-
         return flags, notflags
+
+    def remove_command(self, command):
+        try:
+            del self._commands[command]
+        except KeyError:
+            return
+
+        # Delete the alias table entries for the command
+        for k, v in list(self.alias_table.items()):
+            if v == command:
+                del self.alias_table[k]
+
+    def get_command(self, command):
+        return self._commands.get(command, None)
 
     @property
     def commands(self):
