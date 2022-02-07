@@ -16,7 +16,7 @@ class Parser:
 
         command = self._commands.get(name, None)
         flags, args = self.parse_flags(arguments)
-        ctx = Context(command= command)
+        ctx = Context(command= command, directory= os.getcwd())
 
         return command.invoke(ctx, *args, **flags)
 
@@ -114,7 +114,7 @@ class Command:
                     for param in self.params 
                     if param not in args 
                     and param in defaults]
-                    
+
         for arg in notpassed:
             args[arg] = defaults[arg]
 
@@ -155,8 +155,8 @@ class Context:
 
     The context object also allows you to access the registered Command object of the command execution."""
 
-    def __init__(self, command, **kwargs):
-        self.directory = os.getcwd()
+    def __init__(self, command, directory, **kwargs):
+        self.directory = directory
         self.command = command
         self.flags = FlagDict()
 
