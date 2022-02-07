@@ -1,3 +1,5 @@
+import inspect
+
 def safeget(l, i, d):
     try:
         return l[i]
@@ -14,3 +16,11 @@ def safegetrange(l, i, ds = []):
             r.append(ds[x])
             x += 1
     return r
+
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }

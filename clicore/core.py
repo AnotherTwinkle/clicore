@@ -109,6 +109,15 @@ class Command:
     def _invoke(self, ctx, arguments, passedflags):
         args = dict(zip(self.params[1:], arguments)) # params[0] is the ctx variable
 
+        defaults = utils.get_default_args(self.callback)
+        notpassed = [param 
+                    for param in self.params 
+                    if param not in args 
+                    and param in defaults]
+                    
+        for arg in notpassed:
+            args[arg] = defaults[arg]
+
         flags = {}
         for flag in passedflags:
             f = self._flag_alias_lookup_table.get(flag, flag)  # Retrieve the original name for the flag
