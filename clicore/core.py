@@ -32,6 +32,9 @@ class Parser:
         return self.parse(target, args)
 
     def add_command(self, command):
+        if (' ') in command.name:
+            raise CommandError("Command name cannot have spaces.")
+
         if command.name in self._commands:
             raise CommandAlreadyRegistered("This command has already been reigstered.")
 
@@ -39,6 +42,8 @@ class Parser:
             raise CommandError("Command aliases must be a list or tuple.")
 
         for alias in command.aliases:
+            if (' ') in alias:
+                raise CommandError("Command aliases cannot have spaces.")
             if alias in self.alias_table:
                 raise CommandAlreadyRegistered(f"The alias '{alias}' has already been registered.")
 
@@ -58,8 +63,15 @@ class Parser:
         def decorator(command):
             flag = Flag(name= name, default= default, aliases= aliases, **kwargs)
 
+            if (' ') in flag.name:
+                raise FlagError("Flag name cannot have spaces.")
+
             if not isinstance(flag.aliases, (list, tuple)):
                 raise FlagError("Flag aliases must be a list or tuple.")
+
+            for alias in flag.aliases:
+                if (' ') in alias:
+                    raise FlagError("Flag aliases cannot have spaces.")
 
             command.flags[flag.name] = flag
 
