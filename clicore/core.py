@@ -60,7 +60,7 @@ class Parser:
             return self.add_command(command)
         return decorator
 
-    def add_flag(self, name, default, **kwargs):
+    def add_flag(self, name, default= False, **kwargs):
         def decorator(command):
             flag = Flag(name= name, default= default, **kwargs)
 
