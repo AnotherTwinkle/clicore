@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 
 from . import utils
 from .errors import *
@@ -133,10 +134,26 @@ class Command:
         self.flags = FlagDict()
         self._flag_alias_lookup_table = {}
 
+    def convert(self, arg, converter):
+        if inspect.isclass(converter) and issubclass(converter, Converter):
+            if inspect.ismethod(converter.convert):
+                return converter.convert(arg)
+            else:
+                return converter().convert(arg)
+        elif isinstance(converter, Converter):
+            return converter.convert(arg)
+
+        try:
+            return converter(arg)
+        except KeyError:
+            raise
+
     def _invoke(self, ctx, arguments, passedflags):
-        args = dict(zip(self.params[1:], arguments)) # params[0] is the ctx variable
+        args = dict(zip(self.params[1:], arguments))
 
         defaults = utils.get_default_args(self.callback)
+        annotations = utils.get_annotated_args(self.callback)
+
         notpassed = [param 
                     for param in self.params 
                     if param not in args 
@@ -144,6 +161,12 @@ class Command:
 
         for arg in notpassed:
             args[arg] = defaults[arg]
+
+        for arg in annotations:
+            try:
+                args[arg] = self.convert(args[arg], annotations[arg])
+            except KeyError:
+                pass
 
         flags = {}
         for flag in passedflags:
@@ -189,6 +212,12 @@ class Context:
 
     def add_flag(self, name, value):
         self.flags[name] = value
+
+class Converter:
+    """Argument converters should subclass this."""
+
+    def convert(self, target):
+        raise NotImplementedError('Derived classes need to implement this method.')
 
 class Flag:
     """A flag class. This does not contain the value."""

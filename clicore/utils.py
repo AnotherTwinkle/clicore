@@ -24,3 +24,11 @@ def get_default_args(func):
         for k, v in signature.parameters.items()
         if v.default is not inspect.Parameter.empty
     }
+
+def get_annotated_args(func):
+    signature = inspect.signature(func)
+    return {
+        k : v.annotation
+        for k, v in signature.parameters.items()
+        if v.annotation is not inspect.Parameter.empty
+    }
