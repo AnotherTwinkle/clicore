@@ -60,9 +60,9 @@ class Parser:
             return self.add_command(command)
         return decorator
 
-    def add_flag(self, name, default, aliases = [], **kwargs):
+    def add_flag(self, name, default, **kwargs):
         def decorator(command):
-            flag = Flag(name= name, default= default, aliases= aliases, **kwargs)
+            flag = Flag(name= name, default= default, **kwargs)
 
             if (' ') in flag.name:
                 raise FlagError("Flag name cannot have spaces.")
@@ -221,10 +221,10 @@ class Converter:
 class Flag:
     """A flag class. This does not contain the value."""
 
-    def __init__(self, name, default, aliases, **kwargs):
+    def __init__(self, name, default, **kwargs):
         self.name = name
         self.default = default
-        self.aliases = aliases
+        self.aliases = kwargs.get('aliases', [])
         self.description = kwargs.get('description', None)
         self.passed = False
 
