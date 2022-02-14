@@ -153,20 +153,19 @@ class Command:
 
         defaults = utils.get_default_args(self.callback)
         annotations = utils.get_annotated_args(self.callback)
-
         notpassed = [param 
                     for param in self.params 
                     if param not in args 
                     and param in defaults]
-
-        for arg in notpassed:
-            args[arg] = defaults[arg]
 
         for arg in annotations:
             try:
                 args[arg] = self.convert(args[arg], annotations[arg])
             except KeyError:
                 pass
+
+        for arg in notpassed:
+            args[arg] = defaults[arg]
 
         flags = {}
         for flag in passedflags:
