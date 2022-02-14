@@ -32,3 +32,7 @@ def get_annotated_args(func):
         for k, v in signature.parameters.items()
         if v.annotation is not inspect.Parameter.empty
     }
+
+class MISSING:
+    """The default `type` value for flags"""
+    pass

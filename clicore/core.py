@@ -60,9 +60,9 @@ class Parser:
             return self.add_command(command)
         return decorator
 
-    def add_flag(self, name, default= False, **kwargs):
+    def add_flag(self, name, **kwargs):
         def decorator(command):
-            flag = Flag(name= name, default= default, **kwargs)
+            flag = Flag(name= name, **kwargs)
 
             if (' ') in flag.name:
                 raise FlagError("Flag name cannot have spaces.")
@@ -177,16 +177,23 @@ class Command:
             if flag not in requiredflags:
                 print(f'Ignoring unexpected flag: "{flag}"')
 
-        for flag in requiredflags:
-            self.flags[flag].passed = True
-            ctx.add_flag(flag, flags[flag])
-
         for flag in self.flags:
             if flag not in requiredflags:
                 ctx.add_flag(flag, self.flags[flag].default)
                 # All flags required by the command are passed to it.
                 # To see if a flag was truly passed or not by the user, check 
                 # `command.flags.FLAGNAME.passed`
+
+        for flag in requiredflags:
+            type = self.flags[flag].type
+            if type is not utils.MISSING:
+                try:
+                    flags[flag] = self.convert(flags[flag], type)
+                except KeyError:
+                    pass
+
+            ctx.add_flag(flag, flags[flag])
+            self.flags[flag].passed = True
 
         args[self.params[0]] = ctx # Context
         return self(**args)
@@ -223,8 +230,9 @@ class Flag:
 
     def __init__(self, name, default, **kwargs):
         self.name = name
-        self.default = default
+        self.default = kwargs.get('default', False)
         self.aliases = kwargs.get('aliases', [])
+        self.type = kwargs.get('type', utils.MISSING)
         self.description = kwargs.get('description', None)
         self.passed = False
 
