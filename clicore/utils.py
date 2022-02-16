@@ -1,6 +1,6 @@
 import inspect
 
-def safeget(l, i, d):
+def safeget(l, i, d = None):
     try:
         return l[i]
     except IndexError:
