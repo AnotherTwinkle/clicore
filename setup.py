@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name = "clicore",
-        version = "0.3",
+        version = "0.4",
         author = "AnotherTwinkle",
         url = "https://www.github.com/AnotherTwinkle/clicore",
         packages = ["clicore"],
