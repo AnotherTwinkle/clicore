@@ -211,8 +211,8 @@ class Command:
         except KeyError:
             raise
 
-    def _invoke(self, ctx, arguments, passedflags):
-        args = dict(zip(self.params[1:], arguments))
+    def invoke(self, ctx, *args, **kwargs):
+        args = dict(zip(self.params[1:], args))
 
         defaults = utils.get_default_args(self.callback)
         annotations = utils.get_annotated_args(self.callback)
@@ -231,9 +231,9 @@ class Command:
             args[arg] = defaults[arg]
 
         flags = {}
-        for flag in passedflags:
+        for flag in kwargs:
             f = self._flag_alias_lookup_table.get(flag, flag)  # Retrieve the original name for the flag
-            flags[f] = passedflags[flag]
+            flags[f] = kwargs[flag]
 
         requiredflags = [flag for flag in flags if flag in self.flags]
         for flag in flags:
@@ -260,9 +260,6 @@ class Command:
 
         args[self.params[0]] = ctx # Context
         return self(**args)
-
-    def invoke(self, ctx, *args, **flags):
-        return self._invoke(ctx, args, flags)
 
     def __call__(self, *args, **kwargs):
         return self.callback(*args, **kwargs)
