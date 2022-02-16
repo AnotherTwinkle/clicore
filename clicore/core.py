@@ -230,7 +230,7 @@ class Flag:
 
     def __init__(self, name, default, **kwargs):
         self.name = name
-        self.default = kwargs.get('default', False)
+        self.default = kwargs.get('default', None)
         self.aliases = kwargs.get('aliases', [])
         self.type = kwargs.get('type', utils.MISSING)
         self.description = kwargs.get('description', None)
