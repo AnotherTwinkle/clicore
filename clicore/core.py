@@ -279,6 +279,10 @@ class Context:
     def add_flag(self, name, value):
         self.flags[name] = value
 
+    @property
+    def is_subcommand(self):
+        return self.command.parent is not None
+
 class Converter:
     """Argument converters should subclass this."""
 
