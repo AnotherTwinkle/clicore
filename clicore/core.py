@@ -248,10 +248,10 @@ class Command:
                 # `command.flags.FLAGNAME.passed`
 
         for flag in requiredflags:
-            type = self.flags[flag].type
-            if type is not utils.MISSING:
+            ftype = self.flags[flag].type
+            if ftype is not utils.MISSING:
                 try:
-                    flags[flag] = self.convert(flags[flag], type)
+                    flags[flag] = self.convert(flags[flag], ftype)
                 except KeyError:
                     pass
 
