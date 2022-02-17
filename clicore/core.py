@@ -74,27 +74,8 @@ class Parser:
         return decorator
 
     def add_flag(self, name, **kwargs):
-        def decorator(command):
-            flag = Flag(name= name, **kwargs)
-
-            if (' ') in flag.name:
-                raise FlagError("Flag name cannot have spaces.")
-
-            if not isinstance(flag.aliases, (list, tuple)):
-                raise FlagError("Flag aliases must be a list or tuple.")
-
-            for alias in flag.aliases:
-                if (' ') in alias:
-                    raise FlagError("Flag aliases cannot have spaces.")
-
-            command.flags[flag.name] = flag
-
-            for alias in flag.aliases:
-                command._flag_alias_lookup_table[alias] = flag.name
-            command._flag_alias_lookup_table[flag.name] = flag.name
-
-            return command
-        return decorator
+        '''Calls clicore.add_flag. Use this to make command signatures look more elegant.'''
+        return add_flag(name, **kwargs)
 
     def parse_flags(self, args):
         flags, notflags = ({}, [])
@@ -119,6 +100,7 @@ class Parser:
 
     def remove_command(self, command):
         try:
+            command = self.get_command(command)
             del self._commands[command]
         except KeyError:
             return
@@ -135,6 +117,16 @@ class Parser:
     def commands(self):
         return [command for command in self._commands.values()]
 
+    def load_module(self, module):
+        for command in module._commands:
+            cmd = module._commands[command]
+            cmd.module = module
+            self.add_command(cmd)
+
+    def remove_module(self, module):
+        for command in module._commands:
+            self.remove_command(commmand)
+
 class Command:
     def __init__(self, func, **kwargs):
         self.name = kwargs.get('name') or func.__name__
@@ -143,13 +135,21 @@ class Command:
         self.help = func.__doc__ or None
 
         self.callback = func
-        self.params = self.callback.__code__.co_varnames[:self.callback.__code__.co_argcount]
+        self.module = None
+
         self.flags = FlagDict()
         self._flag_alias_lookup_table = {}
 
         self.parent = kwargs.get('parent', None)
         self._subcommands = {}
         self._subcommand_alias_table = {}
+
+    @property
+    def params(self):
+        params = self.callback.__code__.co_varnames[:self.callback.__code__.co_argcount]
+        if self.module:
+            return params[1:]
+        return params
 
     def command(self, **kwargs):
         def decorator(func):
@@ -262,7 +262,10 @@ class Command:
         return self(**args)
 
     def __call__(self, *args, **kwargs):
-        return self.callback(*args, **kwargs)
+        if self.module is None:
+            return self.callback(*args, **kwargs)
+        else:
+            return self.callback(self.module, *args, **kwargs)
 
 class Context:
     """An object constructed from this is passed as the first argument of all commands.
@@ -283,12 +286,6 @@ class Context:
     def is_subcommand(self):
         return self.command.parent is not None
 
-class Converter:
-    """Argument converters should subclass this."""
-
-    def convert(self, target):
-        raise NotImplementedError('Derived classes need to implement this method.')
-
 class Flag:
     """A flag class. This does not contain the value."""
 
@@ -308,3 +305,55 @@ class FlagDict(dict):
 
     def __getattr__(self, item):
         return self[item]
+
+class Converter:
+    """Argument converters should subclass this."""
+
+    def convert(self, target):
+        raise NotImplementedError('Derived classes need to implement this method.')
+
+class Module:
+    def __new__(cls, *args, **kwargs):
+        newcls = super().__new__(cls)
+        newcls._commands = {}
+
+        # Add the commands 
+        for k, v in inspect.getmembers(newcls):
+            if isinstance(v, Command):
+                newcls._commands[k] = v
+
+        return newcls
+
+    @property
+    def display_name(self):
+        return getattr(self, 'name') or self.__class__.__name__
+
+# Functions
+def command(**kwargs):
+    def decorator(func):
+        return Command(func, **kwargs)
+    return decorator
+
+def add_flag(name, **kwargs):
+    def decorator(command):
+        flag = Flag(name= name, **kwargs)
+
+        if (' ') in flag.name:
+            raise FlagError("Flag name cannot have spaces.")
+
+        if not isinstance(flag.aliases, (list, tuple)):
+            raise FlagError("Flag aliases must be a list or tuple.")
+
+        for alias in flag.aliases:
+            if (' ') in alias:
+                raise FlagError("Flag aliases cannot have spaces.")
+
+        command.flags[flag.name] = flag
+
+        for alias in flag.aliases:
+            command._flag_alias_lookup_table[alias] = flag.name
+        command._flag_alias_lookup_table[flag.name] = flag.name
+
+        return command
+    return decorator
+
