@@ -326,9 +326,17 @@ class Module:
 
     @property
     def display_name(self):
-        return getattr(self, 'name') or self.__class__.__name__
+        return utils.getattr(self, 'name') or self.__class__.__name__
 
-# Functions
+    @property
+    def display_description(self):
+        return utils.getattr(self, 'description') or self.__class__.__doc__
+
+    @property
+    def commands(self):
+        return [command for command in self._commands.values()]
+
+# Decorators
 def command(**kwargs):
     def decorator(func):
         return Command(func, **kwargs)

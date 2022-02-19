@@ -17,6 +17,12 @@ def safegetrange(l, i, ds = []):
             x += 1
     return r
 
+def getattr(obj, target, default= None):
+    try:
+        return obj.__getattribute__(target)
+    except AttributeError:
+        return default
+
 def get_default_args(func):
     signature = inspect.signature(func)
     return {
