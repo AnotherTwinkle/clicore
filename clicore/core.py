@@ -42,8 +42,38 @@ class Parser:
 
         if target is None:
             raise CommandNotProvided("No command was provided.")
-
         return self.parse(target, args)
+
+    def parse_flags(self, args):
+        flags, notflags = ({}, [])
+        x = 0
+        while x < len(args):
+            arg = args[x]
+            if arg.startswith('--') and len(arg) > 2: # Boolean flags.
+                flags[arg[2:]] = True
+            elif arg.startswith('-') and len(arg) > 1: # Store flags.
+                try:
+                    if args[x+1].startswith('-'):
+                        raise FlagError(f'No value was provided for flag {arg}')
+                    flags[arg[1:]] = args[x+1] # The next argument should be the value
+
+                except IndexError:
+                    raise FlagError(f'Unexpected end of input after flag declaration.')
+                x += 1 # We will skip the next index
+            else:
+                notflags.append(arg)
+            x += 1
+        return flags, notflags
+
+    def add_flag(self, name, **kwargs):
+        '''Calls clicore.add_flag. Use this to make command signatures look more elegant.'''
+        return add_flag(name, **kwargs)
+
+    def command(self, **kwargs):
+        def decorator(func):
+            command = Command(func, **kwargs)
+            return self.add_command(command)
+        return decorator
 
     def add_command(self, command):
         if (' ') in command.name:
@@ -67,37 +97,6 @@ class Parser:
         self.alias_table[command.name] = command.name
         return command
 
-    def command(self, **kwargs):
-        def decorator(func):
-            command = Command(func, **kwargs)
-            return self.add_command(command)
-        return decorator
-
-    def add_flag(self, name, **kwargs):
-        '''Calls clicore.add_flag. Use this to make command signatures look more elegant.'''
-        return add_flag(name, **kwargs)
-
-    def parse_flags(self, args):
-        flags, notflags = ({}, [])
-        x = 0
-        while x < len(args):
-            arg = args[x]
-            if arg.startswith('--') and len(arg) > 2: # Boolean flags.
-                flags[arg[2:]] = True
-            elif arg.startswith('-') and len(arg) > 1: # Store flags.
-                try:
-                    if args[x+1].startswith('-'):
-                        raise FlagError(f'No value was provided for flag {arg}')
-                    flags[arg[1:]] = args[x+1] # The next argument should be the value
-
-                except IndexError:
-                    raise FlagError(f'Unexpected end of input after flag declaration.')
-                x += 1 # We will skip the next index
-            else:
-                notflags.append(arg)
-            x += 1
-        return flags, notflags
-
     def remove_command(self, command):
         try:
             command = self.get_command(command)
@@ -116,6 +115,14 @@ class Parser:
     @property
     def commands(self):
         return [command for command in self._commands.values()]
+
+    def get_commands_from(self, obj):
+        '''Get a list of commands residing in an object'''
+        commands = []
+        for m in inspect.getmembers(obj):
+            if isinstance(m, Command):
+                commands.append(m)
+        return commands
 
     def load_module(self, module):
         for command in module._commands:
