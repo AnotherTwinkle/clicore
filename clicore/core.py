@@ -119,9 +119,10 @@ class Parser:
     def get_commands_from(self, obj):
         '''Get a list of commands residing in an object'''
         commands = []
-        for m in inspect.getmembers(obj):
-            if isinstance(m, Command):
-                commands.append(m)
+        for m in dir(obj):
+            member = getattr(obj, m) 
+            if isinstance(member, Command):
+                commands.append(member)
         return commands
 
     def load_module(self, module):
