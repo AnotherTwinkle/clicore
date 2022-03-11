@@ -24,7 +24,7 @@ class Parser:
     def parse(self, name, arguments):
         name = self.alias_table.get(name, None)
         if name is None:
-            raise CommandNotFound(f"{command} is not a reigstered command or alias.")
+            raise CommandNotFound(f"{name} is not a reigstered command or alias.")
 
         command = self._commands.get(name, None)
         command, arguments = self._retrive_subcommand(command, arguments)
@@ -133,7 +133,7 @@ class Parser:
 
     def remove_module(self, module):
         for command in module._commands:
-            self.remove_command(commmand)
+            self.remove_command(commmand)    
 
 class Command:
     def __init__(self, func, **kwargs):
