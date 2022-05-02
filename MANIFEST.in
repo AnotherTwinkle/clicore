@@ -1,3 +1,5 @@
 include README.md
 include .gitignore
 include LICENSE
+include requirements.txt
+include clicore/default.rich

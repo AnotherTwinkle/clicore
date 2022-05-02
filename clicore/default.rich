@@ -1,0 +1,4 @@
+[styles]
+warning = yellow
+error = bold red
+info = dim white
