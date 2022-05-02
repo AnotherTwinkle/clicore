@@ -24,13 +24,13 @@ class Parser:
     def parse(self, name, arguments):
         name = self.alias_table.get(name, None)
         if name is None:
-            raise CommandNotFound(f"{name} is not a reigstered command or alias.")
+            raise CommandNotFound(f"{name} is not a registered command or alias.")
 
         command = self._commands.get(name, None)
         command, arguments = self._retrive_subcommand(command, arguments)
 
         flags, args = self.parse_flags(arguments)
-        ctx = Context(command= command, directory= os.getcwd())
+        ctx = Context(command= command, directory= os.getcwd(), parser= self)
 
         return command.invoke(ctx, *args, **flags)
 
@@ -282,9 +282,10 @@ class Context:
 
     The context object also allows you to access the registered Command object of the command execution."""
 
-    def __init__(self, command, directory, **kwargs):
+    def __init__(self, command, directory, parser **kwargs):
         self.directory = directory
         self.command = command
+        self.parser = parser
         self.flags = FlagDict()
 
     def add_flag(self, name, value):
