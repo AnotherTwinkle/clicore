@@ -282,7 +282,7 @@ class Context:
 
     The context object also allows you to access the registered Command object of the command execution."""
 
-    def __init__(self, command, directory, parser **kwargs):
+    def __init__(self, command, directory, parser, **kwargs):
         self.directory = directory
         self.command = command
         self.parser = parser
