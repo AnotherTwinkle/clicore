@@ -258,7 +258,7 @@ class Command:
         requiredflags = [flag for flag in flags if flag in self.flags]
         for flag in flags:
             if flag not in requiredflags:
-                print(f'Ignoring unexpected flag: "{flag}"')
+                raise FlagError(f"Unexpected flag passed : {flag}")
 
         for flag in self.flags:
             if flag not in requiredflags:
